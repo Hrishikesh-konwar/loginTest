@@ -1,0 +1,35 @@
+const bcrypt = require("bcrypt");
+
+const user = [
+  {
+    username: "John",
+    password: "$2b$10$1sTXfpYWOA6HbD2u2ZYJae.nCTFoSmHB7VVAUA5.1uFuZJcN.mqdu",
+  },
+  {
+    username: "Jane",
+    password: "$2b$10$1sTXfpYWOA6HbD2u2ZYJae.nCTFoSmHB7VVAUA5.1uFuZJcN.mqdu",
+  },
+  {
+    username: "Doe",
+    password: "$2b$10$1sTXfpYWOA6HbD2u2ZYJae.nCTFoSmHB7VVAUA5.1uFuZJcN.mqdu",
+  },
+];
+
+const userLogin = async (req, res) => {
+  const { email, password } = req.body;
+  const userDetails = user.find((user) => user.username === email);
+
+  if (!userDetails) {
+    return res.status(401).json({ message: "User not found" });
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, userDetails.password);
+
+  if (!isPasswordValid) {
+    return res.status(401).json({ message: "Invalid password" });
+  }
+
+  res.status(200).json({ message: "User logged in successfully" });
+};
+
+module.exports = { userLogin };
