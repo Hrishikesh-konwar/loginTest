@@ -1,0 +1,56 @@
+// __tests__/auth.test.js
+const { userLogin } = require("../controller.js");
+const bcrypt = require("bcrypt");
+
+// Mock bcrypt.compare
+jest.mock("bcrypt", () => ({
+  compare: jest.fn(),
+}));
+
+describe("userLogin", () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = {
+      body: {},
+    };
+
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+
+    jest.clearAllMocks();
+  });
+
+  test("should return 401 if user not found", async () => {
+    req.body = { email: "NotAUser", password: "somepass" };
+
+    await userLogin(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ message: "User not found" });
+  });
+
+  test("should return 401 if password is invalid", async () => {
+    req.body = { email: "John", password: "wrongpassword" };
+    bcrypt.compare.mockResolvedValue(false);
+
+    await userLogin(req, res);
+
+    expect(bcrypt.compare).toHaveBeenCalledWith("wrongpassword", expect.any(String));
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ message: "Invalid password" });
+  });
+
+  test("should return 200 if login is successful", async () => {
+    req.body = { email: "Jane", password: "correctpassword" };
+    bcrypt.compare.mockResolvedValue(true);
+
+    await userLogin(req, res);
+
+    expect(bcrypt.compare).toHaveBeenCalledWith("correctpassword", expect.any(String));
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ message: "User logged in successfully" });
+  });
+});
